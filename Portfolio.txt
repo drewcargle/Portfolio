@@ -49,17 +49,35 @@
 		 "Type" : "AWS::EC2::Subnet",
 		 "Properties" : {
 		     "VpcId" : {"Ref" : "VPC" }
-		     "CidrBlock" : "172.16.0.0/20",
+		     "CidrBlock" : "172.16.0.0/20",              need more public subnets for high availibity
 		     "AvailibityZone" : "us-east-1a",
 		     "Tags" : [{"Key" : "stack", "Value" : "MoneyVPC"}]
+
+	    "NatGateway" : {
+		"Type" : "AWS::EC2::NatGateway",
+		"Properties" : {
+		    "AllocationId" : "" ,
+		    "ConnectivityType" : "" ,          depends on public subnet and needs route to internet gateway
+		    "SubnetId" : "PublicSubnet1" ,
+		     
+	
 	    }
 	}
+
+	     "PrivateSubnet1" : {
+		 "Type" : "AWS::EC2::Subnet",
+		 "Properties" : {
+		     "VpcId" : {"Ref" : "VPC" }
+		     "CidrBlock" : "172.16.0.0/20", ????? for database  and web server ( need more private subnets for high availibity
+		     "AvailibityZone" : "us-east-1a",
+		     "Tags" : [{"Key" : "stack", "Value" : "MoneyVPC"}]
+
 
 	     "NetworkAclTho" : {
 		 "Type" : "AWS::EC2::NetworkAcl",
 		 "Properties" : {
 		      "VpcId" : {"Ref" : "VPC"},
-		      "Tags" : [{"Key" : "stack", "Value" : "MoneyVPC"}]
+		      "Tags" : [{"Key" : "stack", "Value" : "MoneyVPC"}]  need more NACls depending on how many suubets and need more rules based on vpc traffic
 	    }
 	},
 	     "InboundRule" : {
@@ -97,9 +115,16 @@
 		     "NetworkAclId" : {"Ref" : "NetworkAclTho" }
 		}
 	    },
+
+	    "mySubnetNetworkAclAssociation" : {
+		 "Type" : " AWS::EC2SubnetNetworkAclAssociation",
+		 "Properties" : {
+		     "SubnetId" : { "Ref" : "PrivateSubnet1" },
+		     "NetworkAclId" : {"Ref" : "NetworkAclTho" }       might need more rules for traffic to private subnet
+
 	    "myRouteTable" : {
 		 "Type" : "AWS::EC2::RouteTable",
-		 "Properties" : {
+		 "Properties" : {                                          may need more route tables for high availibility
 		     "VpcId" : { "Ref" : "VPC" },
 		     "Tags" : [ { "Key" : "Name", "Value" : "Money" } ]
 		}
@@ -108,7 +133,7 @@
 		 "Type" : "AWS::EC2::Route",
 	   	 "DependsOn" : "GatewayToInternet",
 		 "Properties" : {
-		    "RouteTableId" : { "Ref" : "myRouteTable" },
+		    "RouteTableId" : { "Ref" : "myRouteTable" },       definitely need more routes for all traffic to flow through vpc and all services have access to the internet 
 		    "DestinationCidrBlock" : "0.0.0.0/0",
 		    "GatewayId" : { "Ref" : "InternetGateway" }
 		}
@@ -123,14 +148,14 @@
 		      "KeyName" : { "Ref" : "NewKeyName" }
 		      "PrivateIpAddress" : 
 		      "ImageId" : 
-		      "SubnetId" : { "Ref" : "PublicSubnet1" }
+		      "SubnetId" : { "Ref" : "PublicSubnet1" }           more instances for high availibility
 		      "SecurityGroups" : { "Ref" : "" }
 		      "BlockDeviceMappings" : 
 
 	     "BigMoneyInstanceSecurityGroup" : {
 		    "Type" : "AWS::EC2::SecurityGroup",
 		    "Properties" : { 
-		    	"GroupDescription" : "Allow http to instance",
+		    	"GroupDescription" : "Allow http to instance",   security group ingress and egress subject to what the traffic will be and what is required for everything to work
 		    "VpcId" : {"Ref" : "VPC"}
 		    "SecurityGroupIngress" [{
 		        "IpProtocol" : "tcp",
@@ -147,7 +172,52 @@
 		}
 	     }
 
-		    ""
+	      "MyRDSInstance" : {
+		   "Type" : "AWS::RDS::DBInstance",
+		   "Properties" : {
+			"DBSecurityGroup" : [
+			     {
+				"Ref": "DBSecurityGroup"
+			     }
+			],
+			"AllocatedStorage" : ,
+			"AssociatedRoles" : "none" ,  
+			"AvailibityZone" : "us-east-1" ,
+			"BackupRetentionPeriod" : ,
+			"DBClusterIdentifier" : ,
+			"DBInstanceClass" : ,
+			"DBName" : "MyRDSInstance" ,
+			"DBSecurityGroups" : ,
+			"DBSnapshotIdentifier" : ,
+			"DBSubnetGroupName" : ,
+			"DeleteAutomatedBackups" : ,        Private subnet1  Subnet???          need more rds instances for high availibility
+			"DeletionProtection" : , 
+			"Engine" : , 
+			"EngineVersion" : , 
+		        "Iops" : ,
+			"MasterUsername" : ,
+			"MasterUserPassword" : ,
+			
+	      "DBSecurityByEC2SecurityGroup" : {
+		   "Type" : ""AWS::RDS::DBSecurityGroup",
+		   "Properties" : {
+			"GroupDescription" : "Ingress for Amazon EC2 security group", 
+			"DBSecurityGroupIngress" : [
+			    {
+				"EC2SecurityGroupId": ""
+				"EC2SecurityGroupOwnerId": ""
+			    },
+			    {
+				"EC2SecurityGroupID": ""
+				"EC2SecurityGroupOwnerId": ""
+			    }
+			]
+		    }
+		}
+	    }
+        }
+			
+
 		       
 
 			
